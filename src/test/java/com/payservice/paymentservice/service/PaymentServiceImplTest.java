@@ -151,16 +151,14 @@ class PaymentServiceImplTest {
                 anyInt(), anyInt(), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         //Aquí ejecutamos el método real del service pero esperamos que lance una excepción.
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> paymentService.registerPayment(
-                        receipt.getReceiptId(),
-                        receipt.getCustomerId(),
-                        req
-                )
+                () -> paymentService.registerPayment(receiptId, customerId, req)
         );
-
 
         //confirma que el mensaje de error realmente habla del amount inválido.
         assertTrue(ex.getMessage().toLowerCase().contains("amount must be positive"));
@@ -183,15 +181,8 @@ class PaymentServiceImplTest {
                 .thenReturn(Collections.emptyList());
 
         //Aquí ejecutamos el método real del service pero esperamos que lance una excepción.
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
-                () -> paymentService.registerPayment(
-                        receipt.getReceiptId(),
-                        receipt.getCustomerId(),
-                        req
-                )
+        IllegalArgumentException ex = assertThrows( IllegalArgumentException.class, () -> paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
         );
-
 
         //confirma que el mensaje de error realmente habla del amount inválido.
         assertTrue(ex.getMessage().toLowerCase().contains("amount must be positive"));
