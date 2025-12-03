@@ -45,10 +45,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleNotFound(ResourceNotFoundException ex, WebRequest request) {
         ErrorResponseDTO error = buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request);
-        //return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
-    //public ResourceNotFoundException(String msg) { super(HttpStatus.NOT_FOUND, msg); }
 
     // Type mismatch → Ej: enviar string donde va int
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

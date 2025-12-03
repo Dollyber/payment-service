@@ -152,9 +152,15 @@ class PaymentServiceImplTest {
                 .thenReturn(Collections.emptyList());
 
         //Aquí ejecutamos el método real del service pero esperamos que lance una excepción.
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> paymentService.registerPayment(
+                        receipt.getReceiptId(),
+                        receipt.getCustomerId(),
+                        req
+                )
         );
+
 
         //confirma que el mensaje de error realmente habla del amount inválido.
         assertTrue(ex.getMessage().toLowerCase().contains("amount must be positive"));
@@ -177,9 +183,15 @@ class PaymentServiceImplTest {
                 .thenReturn(Collections.emptyList());
 
         //Aquí ejecutamos el método real del service pero esperamos que lance una excepción.
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> paymentService.registerPayment(
+                        receipt.getReceiptId(),
+                        receipt.getCustomerId(),
+                        req
+                )
         );
+
 
         //confirma que el mensaje de error realmente habla del amount inválido.
         assertTrue(ex.getMessage().toLowerCase().contains("amount must be positive"));
@@ -197,9 +209,11 @@ class PaymentServiceImplTest {
         req.setPaymentCurrency("EUR"); // invalid currency
 
         // Act & Assert
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
         );
+
         assertTrue(ex.getMessage().toLowerCase().contains("only pen or usd"));
 
         // Verificamos que no se intentó guardar nada
@@ -216,7 +230,11 @@ class PaymentServiceImplTest {
         // Act & Assert: validar que se lanza IllegalArgumentException por RN1
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+                () -> paymentService.registerPayment(
+                        receipt.getReceiptId(),
+                        receipt.getCustomerId(),
+                        req
+                )
         );
 
         // Verificamos el mensaje (parte importante)
@@ -310,8 +328,13 @@ class PaymentServiceImplTest {
                 .thenReturn(Collections.emptyList());
 
         // Act & Assert
-        OverpaymentException ex = assertThrows(OverpaymentException.class, () ->
-                paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+        OverpaymentException ex = assertThrows(
+                OverpaymentException.class,
+                () -> paymentService.registerPayment(
+                        receipt.getReceiptId(),
+                        receipt.getCustomerId(),
+                        req
+                )
         );
 
         assertTrue(ex.getMessage().contains("exceeds pending amount"));
@@ -364,7 +387,11 @@ class PaymentServiceImplTest {
 
         PendingReceiptException ex = assertThrows(
                 PendingReceiptException.class,
-                () -> paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+                () -> paymentService.registerPayment(
+                        receipt.getReceiptId(),
+                        receipt.getCustomerId(),
+                        req
+                )
         );
 
         // Validamos el mensaje de error
@@ -447,7 +474,11 @@ class PaymentServiceImplTest {
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
-                () -> paymentService.registerPayment(receipt.getReceiptId(), 2, req)
+                () -> paymentService.registerPayment(
+                        receipt.getReceiptId(),
+                        2,
+                        req
+                )
         );
 
         // Validamos el mensaje de error
@@ -471,12 +502,13 @@ class PaymentServiceImplTest {
 
         when(receiptRepository.findById(receipt.getReceiptId())).thenReturn(Optional.of(receipt));
 
-        /*when(receiptRepository.findByServiceIdAndCustomerIdAndDueDateBeforeOrderByDueDateAsc(
-                anyInt(), anyInt(), any(LocalDate.class)))
-                .thenReturn(Collections.emptyList());*/
-
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> paymentService.registerPayment(
+                        receipt.getReceiptId(),
+                        receipt.getCustomerId(),
+                        req
+                )
         );
 
         assertTrue(ex.getMessage().toLowerCase().contains("already paid"));
@@ -772,28 +804,21 @@ class PaymentServiceImplTest {
 
         Payment payment = new Payment();
         payment.setPaymentId(10);
-        payment.setReceiptId(100);
+        payment.setReceiptId(10);
         payment.setCustomerId(1);
 
         when(paymentRepository.findByCustomerIdOrderByPaymentDateDesc(1))
                 .thenReturn(List.of(payment));
 
-        // mock receipt
-        Receipt receipt = new Receipt();
-        receipt.setReceiptId(100);
-        receipt.setServiceId(50);
-        when(receiptRepository.findById(100))
+        when(receiptRepository.findById(10))
                 .thenReturn(Optional.of(receipt));
 
-        // mock service
-        ServiceEntity service = new ServiceEntity();
-        service.setServiceId(50);
-        when(serviceRepository.findById(50))
-                .thenReturn(Optional.of(service));
+        when(serviceRepository.findById(100))
+                .thenReturn(Optional.of(serviceEntity));
 
         // mapper response
         PaymentResponseDTO dto = PaymentResponseDTO.builder().amount(BigDecimal.TEN).build();
-        when(paymentMapper.toPaymentResponse(payment, customer, service, receipt))
+        when(paymentMapper.toPaymentResponse(payment, customer, serviceEntity, receipt))
                 .thenReturn(dto);
 
         List<PaymentResponseDTO> result = paymentService.getPaymentsByCustomer(1);
@@ -801,7 +826,7 @@ class PaymentServiceImplTest {
         assertEquals(1, result.size());
         assertEquals(BigDecimal.TEN, result.get(0).getAmount());
 
-        verify(paymentMapper).toPaymentResponse(payment, customer, service, receipt);
+        verify(paymentMapper).toPaymentResponse(payment, customer, serviceEntity, receipt);
     }
 
     @Test

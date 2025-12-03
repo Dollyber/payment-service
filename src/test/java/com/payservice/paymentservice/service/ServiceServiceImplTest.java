@@ -31,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
-public class ServiceServiceImplTest {
+class ServiceServiceImplTest {
 
     //Mocks (Mockito), que son objetos falsos que simulan las dependencias.
     @Mock

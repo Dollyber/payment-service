@@ -7,7 +7,6 @@ import java.time.LocalDate;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 public class ReceiptInfoDTO {
-    //private Integer receiptId;
     private String receiptNumber;
     private String periodLabel;
     private LocalDate dueDate;

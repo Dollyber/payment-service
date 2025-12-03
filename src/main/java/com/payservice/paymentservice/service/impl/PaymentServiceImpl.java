@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -135,12 +136,22 @@ public class PaymentServiceImpl implements PaymentService {
 
     }
 
-    private BigDecimal convertAmount(BigDecimal amount, String paymentCurrency,
-                                     String receiptCurrency, BigDecimal rate) {
+    private BigDecimal convertAmount(
+            BigDecimal amount,
+            String paymentCurrency,
+            String receiptCurrency,
+            BigDecimal rate
+    ) {
 
-        return paymentCurrency.equalsIgnoreCase(receiptCurrency)
-                ? amount
-                : paymentCurrency.equalsIgnoreCase("USD") ? amount.multiply(rate) : amount.divide(rate, 2, BigDecimal.ROUND_HALF_UP);
+        if (paymentCurrency.equalsIgnoreCase(receiptCurrency)) {
+            return amount;
+        }
+
+        if (paymentCurrency.equalsIgnoreCase("USD")) {
+            return amount.multiply(rate);
+        }
+
+        return amount.divide(rate, 2, RoundingMode.HALF_UP);
     }
 
     private Payment processPayment(Receipt receipt, Integer customerId,

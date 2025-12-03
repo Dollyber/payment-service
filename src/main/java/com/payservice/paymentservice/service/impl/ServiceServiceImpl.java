@@ -35,7 +35,7 @@ public class ServiceServiceImpl implements ServiceService {
     public List<ServiceResponseDTO> getServicesByCustomer(Integer customerId) {
 
         // Validar cliente
-        Customer customer = customerRepository.findById(customerId)
+        customerRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
         // Buscar servicios asociados

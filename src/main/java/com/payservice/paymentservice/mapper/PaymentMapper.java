@@ -5,18 +5,17 @@ import com.payservice.paymentservice.entity.Customer;
 import com.payservice.paymentservice.entity.Payment;
 import com.payservice.paymentservice.entity.Receipt;
 import com.payservice.paymentservice.entity.ServiceEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class PaymentMapper {
 
-    @Autowired
-    private CustomerMapper customerMapper;
-    @Autowired
-    private ServiceMapper serviceMapper;
-    @Autowired
-    private ReceiptMapper receiptMapper;
+    private final CustomerMapper customerMapper;
+    private final ServiceMapper serviceMapper;
+    private final ReceiptMapper receiptMapper;
 
     public PaymentResponseDTO toPaymentResponse(Payment p, Customer c, ServiceEntity s, Receipt r) {
         return new PaymentResponseDTO(

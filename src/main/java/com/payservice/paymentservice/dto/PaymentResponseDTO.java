@@ -14,7 +14,6 @@ public class PaymentResponseDTO {
     private ServiceSummaryDTO service;
     private ReceiptInfoDTO receipt;
 
-    //private Integer paymentId;
     private BigDecimal amount;
     private String paymentCurrency;
     private BigDecimal exchangeRate;

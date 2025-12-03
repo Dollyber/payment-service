@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
-public class ReceiptServiceImplTest {
+class ReceiptServiceImplTest {
 
     //Mocks (Mockito), que son objetos falsos que simulan las dependencias.
     @Mock private ReceiptRepository receiptRepository;
