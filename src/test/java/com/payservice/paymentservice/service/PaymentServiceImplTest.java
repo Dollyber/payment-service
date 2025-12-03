@@ -180,9 +180,15 @@ class PaymentServiceImplTest {
                 anyInt(), anyInt(), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         //Aquí ejecutamos el método real del service pero esperamos que lance una excepción.
-        IllegalArgumentException ex = assertThrows( IllegalArgumentException.class, () -> paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> paymentService.registerPayment(receiptId, customerId, req)
         );
+
 
         //confirma que el mensaje de error realmente habla del amount inválido.
         assertTrue(ex.getMessage().toLowerCase().contains("amount must be positive"));
@@ -199,10 +205,13 @@ class PaymentServiceImplTest {
         req.setAmount(new BigDecimal("10.00"));
         req.setPaymentCurrency("EUR"); // invalid currency
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         // Act & Assert
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+                () -> paymentService.registerPayment(receiptId, customerId, req)
         );
 
         assertTrue(ex.getMessage().toLowerCase().contains("only pen or usd"));
@@ -218,12 +227,15 @@ class PaymentServiceImplTest {
         req.setAmount(new BigDecimal("10.00"));
         req.setPaymentCurrency(null);
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         // Act & Assert: validar que se lanza IllegalArgumentException por RN1
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> paymentService.registerPayment(
-                        receipt.getReceiptId(),
-                        receipt.getCustomerId(),
+                        receiptId,
+                        customerId,
                         req
                 )
         );
@@ -252,9 +264,11 @@ class PaymentServiceImplTest {
                 anyInt(), anyInt(), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
 
+        Integer receiptId = receipt.getReceiptId();
+
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> paymentService.registerPayment(receipt.getReceiptId(), 1, req)
+                () -> paymentService.registerPayment(receiptId, 1, req)
         );
 
         assertTrue(ex.getMessage().toLowerCase().contains("currency cannot be null"));
@@ -318,12 +332,15 @@ class PaymentServiceImplTest {
                 anyInt(), anyInt(), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         // Act & Assert
         OverpaymentException ex = assertThrows(
                 OverpaymentException.class,
                 () -> paymentService.registerPayment(
-                        receipt.getReceiptId(),
-                        receipt.getCustomerId(),
+                        receiptId,
+                        customerId,
                         req
                 )
         );
@@ -345,9 +362,12 @@ class PaymentServiceImplTest {
                 anyInt(), anyInt(), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         // Act & Assert
         OverpaymentException ex = assertThrows(OverpaymentException.class, () ->
-                paymentService.registerPayment(receipt.getReceiptId(), receipt.getCustomerId(), req)
+                paymentService.registerPayment(receiptId, customerId, req)
         );
 
         assertTrue(ex.getMessage().contains("exceeds pending amount"));
@@ -376,11 +396,14 @@ class PaymentServiceImplTest {
                 eq(receipt.getServiceId()), eq(receipt.getCustomerId()), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(prev));
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         PendingReceiptException ex = assertThrows(
                 PendingReceiptException.class,
                 () -> paymentService.registerPayment(
-                        receipt.getReceiptId(),
-                        receipt.getCustomerId(),
+                        receiptId,
+                        customerId,
                         req
                 )
         );
@@ -463,10 +486,12 @@ class PaymentServiceImplTest {
         when(receiptRepository.findById(receipt.getReceiptId()))
                 .thenReturn(Optional.of(receipt));
 
+        Integer receiptId = receipt.getReceiptId();
+
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
                 () -> paymentService.registerPayment(
-                        receipt.getReceiptId(),
+                        receiptId,
                         2,
                         req
                 )
@@ -493,11 +518,14 @@ class PaymentServiceImplTest {
 
         when(receiptRepository.findById(receipt.getReceiptId())).thenReturn(Optional.of(receipt));
 
+        Integer receiptId = receipt.getReceiptId();
+        Integer customerId = receipt.getCustomerId();
+
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> paymentService.registerPayment(
-                        receipt.getReceiptId(),
-                        receipt.getCustomerId(),
+                        receiptId,
+                        customerId,
                         req
                 )
         );
