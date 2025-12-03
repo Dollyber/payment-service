@@ -2,18 +2,20 @@ package com.payservice.paymentservice.service.impl;
 
 import com.payservice.paymentservice.dto.*;
 import com.payservice.paymentservice.entity.*;
-import com.payservice.paymentservice.exception.*;
 import com.payservice.paymentservice.mapper.PaymentMapper;
 import com.payservice.paymentservice.repository.*;
 import com.payservice.paymentservice.service.PaymentService;
 import com.payservice.paymentservice.util.ExchangeRateConstants;
+import com.payservice.paymentservice.util.exception.NoPaymentsFoundException;
+import com.payservice.paymentservice.util.exception.OverpaymentException;
+import com.payservice.paymentservice.util.exception.PendingReceiptException;
+import com.payservice.paymentservice.util.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -30,13 +32,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentResponseDTO registerPayment(Integer receiptId, Integer customerId, PaymentRequestDTO req) {
 
-        //R1: Solo se permite pagar en PEN o USD
+        //RN1: Solo se permite pagar en PEN o USD
         validateCurrency(req.getPaymentCurrency());
 
         //cargar y validar recibo
         Receipt receipt = loadAndValidateReceipt(receiptId, customerId);
 
-        //RN6: No se puede pagar un recibo nuevo si el anterior no está paga
+        //RN5: El servicio se considera “pagado” cuando el saldo pendiente llega a cero
+        validateNotAlreadyPaid(receipt);
+
+        //RN6: No se puede pagar un recibo nuevo si el anterior no está pagado
         validatePendingPreviousReceipts(receipt);
 
         //Se valida que el monto sea positivo
@@ -52,13 +57,9 @@ public class PaymentServiceImpl implements PaymentService {
         BigDecimal amountConverted = convertAmount(amount, req.getPaymentCurrency(),
                 receipt.getCurrency(), exchangeRate);
 
-
         //RN2: Un servicio puede pagarse parcial o totalmente
         //RN3: Los pagos parciales no pueden exceder el saldo pendiente
         validateNotExceedPending(amountConverted, receipt.getPendingAmount());
-
-        //RN5: El servicio se considera “pagado” cuando el saldo pendiente llega a cero
-        validateNotAlreadyPaid(receipt);
 
         Payment payment = processPayment(receipt, customerId, amount, exchangeRate, amountConverted, req.getPaymentCurrency());
 
@@ -69,10 +70,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     // VALIDACIONES
-
     private void validateCurrency(String currency) {
+        if (currency == null) throw new IllegalArgumentException("Currency cannot be null");
         if (!"PEN".equalsIgnoreCase(currency) && !"USD".equalsIgnoreCase(currency)) {
-            throw new BadRequestException("RN1: Only PEN or USD allowed");
+            throw new IllegalArgumentException("RN1: Only PEN or USD allowed"); //Advise Controller
         }
     }
 
@@ -97,27 +98,41 @@ public class PaymentServiceImpl implements PaymentService {
                 .anyMatch(r -> !"PAID".equalsIgnoreCase(r.getReceiptStatus()));
 
         if (anyUnpaid) {
-            throw new BadRequestException("RN6: Cannot pay this receipt while previous receipts are unpaid");
+            throw new PendingReceiptException("RN6: Cannot pay this receipt while previous receipts are unpaid");
         }
     }
 
     private BigDecimal validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BadRequestException("Amount must be positive");
+            throw new IllegalArgumentException("Amount must be positive");
         }
         return amount;
     }
 
-    private void validateNotExceedPending(BigDecimal amount, BigDecimal pending) {
-        if (amount.compareTo(pending) > 0) {
-            throw new BadRequestException("RN3: Payment exceeds pending amount");
+    private void validateNotAlreadyPaid(Receipt receipt) {
+        if ("PAID".equalsIgnoreCase(receipt.getReceiptStatus())) {
+            throw new IllegalArgumentException("RN5: Receipt already PAID; no further payments allowed");
         }
     }
 
-    private void validateNotAlreadyPaid(Receipt receipt) {
-        if ("PAID".equalsIgnoreCase(receipt.getReceiptStatus())) {
-            throw new BadRequestException("RN5: Receipt already PAID; no further payments allowed");
+    private void validateNotExceedPending(BigDecimal amount, BigDecimal pending) {
+        if (amount.compareTo(pending) > 0) {
+            throw new OverpaymentException("RN3: Payment exceeds pending amount");
         }
+    }
+
+    private BigDecimal determineExchangeRate(String paymentCurrency, String receiptCurrency) {
+
+        if (paymentCurrency == null || receiptCurrency == null) {
+            throw new IllegalArgumentException("Currency cannot be null");
+        }
+
+        if (paymentCurrency.equalsIgnoreCase(receiptCurrency)) {
+            return ExchangeRateConstants.DEFAULT_RATE;
+        } else {
+            return ExchangeRateConstants.USD_RATE;
+        }
+
     }
 
     private BigDecimal convertAmount(BigDecimal amount, String paymentCurrency,
@@ -141,36 +156,60 @@ public class PaymentServiceImpl implements PaymentService {
         // update receipt
         receipt.setPendingAmount(newPending);
         receipt.setReceiptStatus(newStatus);
+        receipt.setUserModifi(1); //System user
+        receipt.setDateModifi(LocalDateTime.now());
         receiptRepository.save(receipt);
 
         // create payment
         Payment payment = new Payment();
         payment.setReceiptId(receipt.getReceiptId());
         payment.setCustomerId(customerId);
-        payment.setPaymentDate(Instant.now());
+        payment.setPaymentDate(LocalDateTime.now());
         payment.setAmount(amount);
         payment.setPaymentCurrency(paymentCurrency);
         payment.setExchangeRate(rate);
         payment.setPreviousPendingAmount(previousPending);
         payment.setNewPendingAmount(newPending);
         payment.setPaymentStatus(newStatus);
+        payment.setDateRegist(LocalDateTime.now());
+        payment.setUserRegist(1); //System user
 
         return paymentRepository.save(payment);
     }
 
-    private BigDecimal determineExchangeRate(String paymentCurrency, String receiptCurrency) {
+    //Api historial de pago
+    @Override
+    public List<PaymentResponseDTO> getPaymentsByCustomer(Integer customerId) {
 
-        if (paymentCurrency == null || receiptCurrency == null) {
-            throw new BadRequestException("Currency cannot be null");
+        // Validar si el cliente existe
+        customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+
+        // Obtener pagos
+        List<Payment> payments = paymentRepository
+                .findByCustomerIdOrderByPaymentDateDesc(customerId);
+
+        if (payments.isEmpty()) {
+            throw new NoPaymentsFoundException("Customer has no registered payments");
         }
 
-        if (paymentCurrency.equalsIgnoreCase(receiptCurrency)) {
-            return ExchangeRateConstants.DEFAULT_RATE;
-        } else {
-            return ExchangeRateConstants.USD_RATE;
-        }
+        // Mapear todos los pagos a DTO
+        return payments.stream().map(payment -> {
 
-        //throw new BadRequestException("Exchange rate not defined for currency " + paymentCurrency);
+            // cargar recibo y servicio relacionados
+            Receipt receipt = receiptRepository.findById(payment.getReceiptId())
+                    .orElse(null);
+
+            ServiceEntity service = receipt != null ?
+                    serviceRepository.findById(receipt.getServiceId()).orElse(null)
+                    : null;
+
+            Customer customer = customerRepository.findById(customerId).orElse(null);
+
+            return paymentMapper.toPaymentResponse(payment, customer, service, receipt);
+
+        }).toList();
     }
+
 }
 

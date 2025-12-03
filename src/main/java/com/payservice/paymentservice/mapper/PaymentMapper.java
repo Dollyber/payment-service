@@ -26,6 +26,8 @@ public class PaymentMapper {
                 p.getAmount(),
                 p.getPaymentCurrency(),
                 p.getExchangeRate(),
+                p.getPreviousPendingAmount(),
+                p.getNewPendingAmount(),
                 p.getPaymentStatus(),
                 p.getPaymentDate()
         );

@@ -3,7 +3,7 @@ package com.payservice.paymentservice.dto;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class PaymentResponseDTO {
@@ -18,6 +18,8 @@ public class PaymentResponseDTO {
     private BigDecimal amount;
     private String paymentCurrency;
     private BigDecimal exchangeRate;
+    private BigDecimal previousPendingAmount;
+    private BigDecimal newPendingAmount;
     private String paymentStatus;
-    private Instant paymentDate;
+    private LocalDateTime paymentDate;
 }

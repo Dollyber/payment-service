@@ -6,7 +6,7 @@ import lombok.*;
 public class ServiceSummaryDTO {
     //private Integer serviceId;
     private String serviceName;
-    private Boolean isActive;
+    //private Boolean isActive;
     private String description;
 }
 

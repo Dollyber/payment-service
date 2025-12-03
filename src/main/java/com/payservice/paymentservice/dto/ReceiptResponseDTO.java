@@ -5,9 +5,11 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Data @NoArgsConstructor @AllArgsConstructor
-public class ReceiptInfoDTO {
-    //private Integer receiptId;
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class ReceiptResponseDTO {
+    private CustomerSummaryDTO customer;
+    private ServiceSummaryDTO service;
+
     private String receiptNumber;
     private String periodLabel;
     private LocalDate dueDate;

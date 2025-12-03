@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "receipts", schema = "operation")
@@ -52,4 +53,16 @@ public class Receipt {
 
     @Column(name = "receipt_status")
     private String receiptStatus;
+
+    @Column(name = "date_regist", updatable = false)
+    private LocalDateTime dateRegist;
+
+    @Column(name = "user_regist", updatable = false)
+    private Integer userRegist;
+
+    @Column(name = "date_modifi", insertable = false)
+    private LocalDateTime dateModifi;
+
+    @Column(name = "user_modifi", insertable = false)
+    private Integer userModifi;
 }

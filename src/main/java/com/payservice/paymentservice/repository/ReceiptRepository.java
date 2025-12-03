@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ReceiptRepository extends JpaRepository<Receipt, Integer> {
-    List<Receipt> findByServiceIdAndCustomerIdOrderByDueDateAsc(Integer serviceId, Integer customerId);
     List<Receipt> findByServiceIdAndCustomerIdAndDueDateBeforeOrderByDueDateAsc(Integer serviceId, Integer customerId, LocalDate dueDate);
+    List<Receipt> findByServiceIdAndCustomerIdOrderByDueDateDesc(Integer serviceId, Integer customerId);
+    List<Receipt> findByServiceIdAndCustomerId(Integer serviceId, Integer customerId);
+
 }

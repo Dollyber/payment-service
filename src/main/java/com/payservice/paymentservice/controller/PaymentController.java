@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/payments")
 @RequiredArgsConstructor
@@ -22,6 +24,14 @@ public class PaymentController {
 
         PaymentResponseDTO resp = paymentService.registerPayment(receiptId, customerId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+    }
+
+    @GetMapping("/customers/{customerId}")
+    public ResponseEntity<List<PaymentResponseDTO>> getPaymentsByCustomer(
+            @PathVariable Integer customerId) {
+
+        List<PaymentResponseDTO> list = paymentService.getPaymentsByCustomer(customerId);
+        return ResponseEntity.ok(list);
     }
 
 }
